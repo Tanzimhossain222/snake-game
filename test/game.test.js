@@ -101,4 +101,19 @@ describe('Game', () => {
       expect(getState(game).snake.direction).toEqual({ x: 1, y: 0 })
     })
   })
+
+  it('tick does nothing when game is already won', () => {
+    game.won = true
+    tick(game)
+    expect(getState(game).won).toBe(true)
+    expect(getState(game).gameOver).toBe(false)
+  })
+
+  it('multiple direction changes before tick uses last valid', () => {
+    const direction1 = { x: 0, y: -1 }
+    const direction2 = { x: -1, y: 0 }
+    changeDirection(game, direction1)
+    changeDirection(game, direction2)
+    expect(getState(game).snake.direction).toEqual({ x: -1, y: 0 })
+  })
 })

@@ -8,6 +8,16 @@ describe('Snake', () => {
     expect(snake.direction).toEqual({ x: 1, y: 0 })
   })
 
+  it('creates a snake with default position when null', () => {
+    const snake = createSnake(null)
+    expect(snake.body).toEqual([{ x: 0, y: 0 }])
+  })
+
+  it('creates a snake with default position when undefined', () => {
+    const snake = createSnake(undefined)
+    expect(snake.body).toEqual([{ x: 0, y: 0 }])
+  })
+
   describe('getHead', () => {
     it('returns the first cell of the body', () => {
       const snake = createSnake({ x: 3, y: 4 })
@@ -43,6 +53,11 @@ describe('Snake', () => {
     })
   })
 
+  it('checkSelfCollision returns false for single segment snake', () => {
+    const snake = createSnake({ x: 5, y: 5 })
+    expect(checkSelfCollision(snake)).toBe(false)
+  })
+
   describe('setDirection', () => {
     it('sets a valid direction', () => {
       const snake = createSnake({ x: 5, y: 5 })
@@ -69,6 +84,13 @@ describe('Snake', () => {
       snake.direction = { x: 1, y: 0 }
       setDirection(snake, { x: 0, y: 1 })
       expect(snake.direction).toEqual({ x: 0, y: 1 })
+    })
+
+    it('ignores zero direction vector', () => {
+      const snake = createSnake({ x: 5, y: 5 })
+      snake.direction = { x: 1, y: 0 }
+      setDirection(snake, { x: 0, y: 0 })
+      expect(snake.direction).toEqual({ x: 1, y: 0 })
     })
   })
 

@@ -71,3 +71,9 @@ export function tick(game) {
     return
   }
 }
+
+export function restartGame(game) {
+  const { width, height } = game.board
+  const fresh = createGame({ width, height })
+  Object.assign(game, fresh)
+}

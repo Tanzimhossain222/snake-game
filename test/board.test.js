@@ -53,6 +53,26 @@ describe('Board', () => {
       const occupied = [{ x: 1, y: 2 }]
       expect(isOccupied(board, { x: 5, y: 5 }, occupied)).toBe(false)
     })
+
+    it('returns false for empty occupied cells', () => {
+      const board = createBoard(10, 10)
+      expect(isOccupied(board, { x: 5, y: 5 }, [])).toBe(false)
+    })
+  })
+
+  it('creates a board with minimum valid dimensions', () => {
+    const board = createBoard(1, 1)
+    expect(board.width).toBe(1)
+    expect(board.height).toBe(1)
+  })
+
+  it('placeFood works when only one cell available', () => {
+    const board = createBoard(1, 1)
+    const occupied = [{ x: 0, y: 0 }]
+    expect(() => placeFood(board, occupied)).toThrow('Board is full')
+    const board2 = createBoard(2, 1)
+    placeFood(board2, [{ x: 0, y: 0 }])
+    expect(board2.food).toEqual({ x: 1, y: 0 })
   })
 
   describe('placeFood', () => {

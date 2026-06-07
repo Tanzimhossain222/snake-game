@@ -7,23 +7,142 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0f0f23;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: monospace;
+      font-family: 'Segoe UI', monospace;
+      padding: 20px;
+    }
+    .game-container {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 60px rgba(0, 255, 136, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #00ff88, #00ccff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .score-board {
+      display: flex;
+      gap: 24px;
+    }
+    .score-item {
+      text-align: right;
+    }
+    .score-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .score-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .score-value.high {
+      color: #ffcc00;
     }
     canvas {
-      border: 2px solid #00ff88;
+      display: block;
+      border: 2px solid rgba(0, 255, 136, 0.3);
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.05), inset 0 0 30px rgba(0, 0, 0, 0.3);
+    }
+    .game-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .controls-hint {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.35);
+    }
+    .controls-hint kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: monospace;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .restart-btn {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.25);
+      color: #00ff88;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: monospace;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .restart-btn:hover {
+      background: rgba(0, 255, 136, 0.2);
+      border-color: #00ff88;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+      transform: translateY(-1px);
+    }
+    .restart-btn:active {
+      transform: translateY(0);
+    }
+    @media (max-width: 600px) {
+      .game-container {
+        padding: 16px;
+        border-radius: 12px;
+      }
+      h1 { font-size: 18px; }
+      .score-value { font-size: 18px; }
+      .controls-hint { font-size: 11px; }
     }
   </style>
 </head>
 <body>
-  <canvas id="game"></canvas>
+  <div class="game-container">
+    <div class="game-header">
+      <h1>Snake</h1>
+      <div class="score-board">
+        <div class="score-item">
+          <div class="score-label">Score</div>
+          <div class="score-value" id="scoreDisplay">0</div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">Best</div>
+          <div class="score-value high" id="highScoreDisplay">0</div>
+        </div>
+      </div>
+    </div>
+    <canvas id="game"></canvas>
+    <div class="game-footer">
+      <div class="controls-hint">
+        <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or arrows to move &middot; <kbd>R</kbd> restart
+      </div>
+      <button class="restart-btn" id="restartBtn">Restart</button>
+    </div>
+  </div>
   <script type="module">
-    import { createGame, tick, changeDirection, getState } from './src/game.js'
+    import { createGame, tick, changeDirection, getState, restartGame } from './src/game.js'
     import {
       createRenderer, clearCanvas, drawGrid, drawSnake, drawFood, drawScore, drawGameOver, drawWin,
     } from './src/renderer.js'
@@ -33,11 +152,17 @@
     const ROWS = 20
 
     const canvas = document.getElementById('game')
+    const scoreDisplay = document.getElementById('scoreDisplay')
+    const highScoreDisplay = document.getElementById('highScoreDisplay')
+    const restartBtn = document.getElementById('restartBtn')
+
     canvas.width = COLS * CELL
     canvas.height = ROWS * CELL
 
     const renderer = createRenderer(canvas, CELL)
     let game = createGame({ width: COLS, height: ROWS })
+    let highScore = parseInt(localStorage.getItem('snakeHighScore') || '0', 10)
+    highScoreDisplay.textContent = highScore
 
     function render() {
       const state = getState(game)
@@ -46,20 +171,47 @@
       drawSnake(renderer, state.snake)
       drawFood(renderer, state.food)
       drawScore(renderer, state.score, COLS)
+      scoreDisplay.textContent = state.score
       if (state.gameOver) drawGameOver(renderer, COLS, ROWS)
       if (state.won) drawWin(renderer, COLS, ROWS)
     }
 
+    function startLoop() {
+      lastTime = 0
+      loop(0)
+    }
+
+    function handleRestart() {
+      const prevScore = getState(game).score
+      if (prevScore > highScore) {
+        highScore = prevScore
+        highScoreDisplay.textContent = highScore
+        localStorage.setItem('snakeHighScore', String(highScore))
+      }
+      restartGame(game)
+      render()
+      startLoop()
+    }
+
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault()
+        handleRestart()
+        return
+      }
       const keyMap = {
         ArrowUp: { x: 0, y: -1 },
         ArrowDown: { x: 0, y: 1 },
         ArrowLeft: { x: -1, y: 0 },
         ArrowRight: { x: 1, y: 0 },
         w: { x: 0, y: -1 },
+        W: { x: 0, y: -1 },
         s: { x: 0, y: 1 },
+        S: { x: 0, y: 1 },
         a: { x: -1, y: 0 },
+        A: { x: -1, y: 0 },
         d: { x: 1, y: 0 },
+        D: { x: 1, y: 0 },
       }
       const dir = keyMap[e.key]
       if (dir) {
@@ -68,10 +220,14 @@
       }
     })
 
+    restartBtn.addEventListener('click', handleRestart)
+
     let lastTime = 0
     const INTERVAL = 150
 
     function loop(time) {
+      const state = getState(game)
+      if (state.gameOver || state.won) return
       if (time - lastTime >= INTERVAL) {
         lastTime = time
         tick(game)
@@ -83,7 +239,7 @@
     }
 
     render()
-    requestAnimationFrame(loop)
+    startLoop()
   </script>
 </body>
 </html>
