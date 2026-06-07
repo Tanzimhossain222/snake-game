@@ -1,6 +1,7 @@
 export function createSnake(startPosition) {
+  const pos = startPosition || { x: 0, y: 0 }
   return {
-    body: [{ ...startPosition }],
+    body: [{ ...pos }],
     direction: { x: 1, y: 0 },
     growing: false,
   }
@@ -28,6 +29,7 @@ export function grow(snake) {
 }
 
 export function setDirection(snake, newDirection) {
+  if (newDirection.x === 0 && newDirection.y === 0) return
   const opposite =
     snake.direction.x + newDirection.x === 0 &&
     snake.direction.y + newDirection.y === 0
