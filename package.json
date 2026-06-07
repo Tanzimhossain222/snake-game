@@ -1,0 +1,13 @@
+{
+  "name": "snake-game",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "npx serve ."
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}
