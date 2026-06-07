@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f23;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: monospace;
+    }
+    canvas {
+      border: 2px solid #00ff88;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <script type="module">
+    import { createGame, tick, changeDirection, getState } from './src/game.js'
+    import {
+      createRenderer, clearCanvas, drawGrid, drawSnake, drawFood, drawScore, drawGameOver, drawWin,
+    } from './src/renderer.js'
+
+    const CELL = 24
+    const COLS = 20
+    const ROWS = 20
+
+    const canvas = document.getElementById('game')
+    canvas.width = COLS * CELL
+    canvas.height = ROWS * CELL
+
+    const renderer = createRenderer(canvas, CELL)
+    let game = createGame({ width: COLS, height: ROWS })
+
+    function render() {
+      const state = getState(game)
+      clearCanvas(renderer, COLS, ROWS)
+      drawGrid(renderer, COLS, ROWS)
+      drawSnake(renderer, state.snake)
+      drawFood(renderer, state.food)
+      drawScore(renderer, state.score, COLS)
+      if (state.gameOver) drawGameOver(renderer, COLS, ROWS)
+      if (state.won) drawWin(renderer, COLS, ROWS)
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const keyMap = {
+        ArrowUp: { x: 0, y: -1 },
+        ArrowDown: { x: 0, y: 1 },
+        ArrowLeft: { x: -1, y: 0 },
+        ArrowRight: { x: 1, y: 0 },
+        w: { x: 0, y: -1 },
+        s: { x: 0, y: 1 },
+        a: { x: -1, y: 0 },
+        d: { x: 1, y: 0 },
+      }
+      const dir = keyMap[e.key]
+      if (dir) {
+        e.preventDefault()
+        changeDirection(game, dir)
+      }
+    })
+
+    let lastTime = 0
+    const INTERVAL = 150
+
+    function loop(time) {
+      if (time - lastTime >= INTERVAL) {
+        lastTime = time
+        tick(game)
+        render()
+      }
+      if (!getState(game).gameOver && !getState(game).won) {
+        requestAnimationFrame(loop)
+      }
+    }
+
+    render()
+    requestAnimationFrame(loop)
+  </script>
+</body>
+</html>
